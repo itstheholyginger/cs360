@@ -47,7 +47,7 @@ void get_inode(int fd, int ino, int inode_table, INODE *inode) {
 }
 
 int does_exf2fs_exist() {
-    printf("File Descriptor:\t%d\nt", fd);
+    printf("File Descriptor:\t%d\n", fd);
     printf("char_buf:\t%d\n", char_buf);
 
     get_block(fd, 1, char_buf);
@@ -77,8 +77,8 @@ int parse_inode_from_beginning_block() {
 
     ip = (INODE *)char_buf + 1;
 
-    printf("\tMode:\t%4x", ip->i_mode);
-    printf("\tMid:\t%d\tgid=%d\n", ip->i_uid, ip->i_gid);
+    printf("\tMode:\t%4x\n", ip->i_mode);
+    printf("\tMid:\t%d\n\tgid=%d\n", ip->i_uid, ip->i_gid);
     printf("\tSize:\t%d\n", ip->i_size);
     printf("\tTime:\t%s", ctime(&ip->i_ctime));
     printf("\tLink:\t%d\n", ip->i_links_count);
@@ -151,8 +151,8 @@ int showblock() {
             printf("\tInodesPerBlock:\t%d\n", inodes_per_block);
             printf("\tIn Block:\t%d\n", ((inode_num - 1) / inodes_per_block) + InodesBeginBlock);
             printf("\tOffset:\t%d\n", (inode_num - 1) % inodes_per_block);
-            printf("\tMode:\t%4x ", ip->i_mode);
-            printf("\tuid:\t%d.\tgid:\t%d", ip->i_uid, ip->i_gid);
+            printf("\tMode:\t%4x\n", ip->i_mode);
+            printf("\tuid:\t%d\n\tgid:\t%d\n", ip->i_uid, ip->i_gid);
             printf("\tSize:\t%d\n", ip->i_size);
             printf("\tTime:\t%s\n", ctime(&ip->i_ctime));
             printf("\tLink:\t%d\n", ip->i_links_count);
