@@ -1,3 +1,0 @@
-/home/theholyginger/CLionProjects/cs360_lab4/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/theholyginger/CLionProjects/cs360_lab4/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/theholyginger/CLionProjects/cs360_lab4/cmake-build-debug/CMakeFiles/cs360_lab4.dir
