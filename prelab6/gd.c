@@ -19,6 +19,9 @@ SUPER *sp;
 INODE *ip;
 DIR *dp;
 
+int block_size, inode_table, inode_size, first_block, inodes_per_block;
+int inode_bitmap, block_bitmap, block_offset, inode_count, inode_offset;
+
 #define BLKSIZE 1024
 
 // globals
@@ -35,9 +38,23 @@ int gd() {
     
     char buf[BLKSIZE];
 
-    // get super block
-    get_block(fd, 1, buf);
-    sp = (SUPER *)buf;
+    // get gd block
+    get_block(fd, 2, buf);
+    gp = (GD *)buf;
+
+
+    // check EXT 2 FS magic number
+    printf("\n\n********** group descriptor **********\n");
+    printf("s_inodes_count \t\t=\t%d\n", gp->bg_block_bitmap);
+    block_bitmap = gp->bg_block_bitmap;
+    printf("bg_inode_bitmap \t=\t%d\n", gp->bg_inode_bitmap);
+    inode_bitmap = gp->bg_inode_bitmap;
+    printf("bg_inode_table \t\t=\t%d\n", gp->bg_inode_table);
+    inode_table = gp->bg_inode_table;
+    printf("bg_free_blocks_count \t=\t%d\n", gp->bg_free_blocks_count);
+    printf("bg_free_inodes_count \t=\t%d\n", gp->bg_free_inodes_count);
+    printf("bg_used_dirs_count \t=\t%d\n", gp->bg_used_dirs_count);
+    putchar('\n');
 }
 
 
@@ -53,6 +70,9 @@ int main(int argc, char const *argv[])
         printf("open %s failed\n", disk);
         exit(1);
     }
+
+
     gd();
+    
     return 0;
 }
