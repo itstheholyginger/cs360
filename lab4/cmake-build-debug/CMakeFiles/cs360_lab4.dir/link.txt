@@ -1,0 +1,1 @@
+/usr/bin/cc -g   CMakeFiles/cs360_lab4.dir/main.c.o  -o cs360_lab4 
