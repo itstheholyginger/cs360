@@ -41,7 +41,7 @@ int get_block(int fd, int blk, char buf[]) {
     read(fd, buf, BLKSIZE);
 }
 
-void get_inode(int fd, int ino, int inode_table, INODE *inode) {
+int get_inode(int fd, int ino, int inode_table, INODE *inode) {
     lseek(fd, BLKOFFSET(inode_table) + (ino - 1) * sizeof(INODE), 0);
     read(fd, inode, sizeof(INODE));
 }
@@ -58,7 +58,12 @@ int does_exf2fs_exist() {
         printf("This is not an ext2 file.....exiting\n");
         exit(1);
     }
-    printf("\n******SUPERBLOCK******\n\tnblocks:\t%d\n\tinodes_per:\t%d\n\tfree_inodes:\t%d\n\tfree_total_blocks:\t%d\n", sp->s_blocks_count, sp->s_inodes_count, sp->s_inodes_per_group, sp->s_free_inodes_count, sp->s_free_blocks_count);
+    printf("\n********** SUPERBLOCK **********\n");
+    printf("\tnblocks:\t%d\n", sp->s_blocks_count);
+    printf("\tinodes_count:\t%d\n", sp->s_inodes_count);
+    printf("\tinodes_per:\t%d\n", sp->s_inodes_per_group);
+    printf("\tfree_inodes:\t%d\n", sp->s_free_inodes_count);
+    printf("\tfree_total_blocks:\t%d\n", sp->s_free_blocks_count);
 }
 int InodesBeginBlock = 0;
 
@@ -77,8 +82,9 @@ int parse_inode_from_beginning_block() {
 
     ip = (INODE *)char_buf + 1;
 
+
     printf("\tMode:\t%4x\n", ip->i_mode);
-    printf("\tMid:\t%d\n\tgid=%d\n", ip->i_uid, ip->i_gid);
+    printf("\tMid:\t%d\n\tgid:\t%d\n", ip->i_uid, ip->i_gid);
     printf("\tSize:\t%d\n", ip->i_size);
     printf("\tTime:\t%s", ctime(&ip->i_ctime));
     printf("\tLink:\t%d\n", ip->i_links_count);
@@ -102,7 +108,7 @@ int tokenize() {
 }
 
 int search(INODE *ip, char *name) {
-    printf("\n*************************");
+    printf("\n****************************************");
     printf("\nSearching for:\t%s", name);
     for (i_count = 0; i_count < 12; i_count++) {
         if (!ip->i_block[i_count]) {
@@ -139,7 +145,7 @@ int showblock() {
         inode_num = search(ip, name[i_count]);
             if (!inode_num) {
                 printf("\nCan't find name[%d]:\t'%s'\n", i_count, name[i_count]);
-                exit(1);
+                break;
             }
             int inodes_per_block = BLKSIZE/sizeof(INODE);
 
@@ -165,45 +171,58 @@ int showblock() {
                     continue;
                 } else {
                     printf("\nname[%d], '%s', is not a DIR\n", i_count, name[i_count]);
-                    exit(1);
-                }
+                    }
             }
     }
-
     int total_blocks[256], dist_block_one[256], disk_block_two[256];
-    printf("\n****** The direct blocks of inode %d is: ******\n", inode_num);
-    for(i_count = 0; i_count < 14; i_count++) {
-        if (!ip->i_block[i_count]) {
-            continue;
-        } else {
-            printf("i_block[%d]:\t%d\n", i_count, ip->i_block[i_count]);
-        }
-    }
-    printf("\n****** Indirect Blocks ******\n");
-    get_block(fd, ip->i_block[12], total_blocks);
-    putchar(' ');
+    printf("\n********** The direct blocks of inode %d is: **********\n", inode_num);
 
-    for (i_count = 0; i_count < (sizeof(total_blocks) / sizeof(int)); i_count++) {
-        if (total_blocks[i_count]) {
-            printf("%d ", total_blocks[i_count]);
-            if (!(i_count % 10) && i_count) {
-                printf("\n ");
-            }
-        } else {
-            continue;
-        }
-    }
-    printf("\n\n****** Double Indirect Blocks ******\n");
+    for(int index_counter = 0; index_counter < 14;index_counter++)
+	{
+		if (ip->i_block[index_counter] == 0)
+		{
+			continue;
+		}
+		else
+		{
+			printf("i_block[%d] = %d \n", index_counter, ip->i_block[index_counter]);
+		}
+
+
+	}
+    printf("\n********** Single Indirect Blocks **********\n");
+
+    get_block(fd, ip->i_block[12], total_blocks);
+	putchar(' ');
+
+	for (int index_counter = 0; index_counter < (sizeof(total_blocks) / sizeof(int)); index_counter++)
+	{
+		if (total_blocks[index_counter] != 0)
+		{
+			printf("%d ", total_blocks[index_counter]);
+			if (index_counter % 10 == 0 && index_counter != 0)
+			{
+				printf("\n ");
+			}
+		}
+
+		else
+		{
+			continue;
+		}
+
+	}
+    printf("\n\n********** Double Indirect Blocks **********\n");
     get_block(fd, ip->i_block[13], dist_block_one);
     putchar(' ');
     for(i_count = 0; i_count < (sizeof(dist_block_one) / sizeof(int)); i_count++) {
         if(dist_block_one[i_count]) {
             printf("%d ", dist_block_one[i_count]);
-            printf("\n********************************\n");
+            printf("\n****************************************\n");
             putchar(' ');
             get_block(fd, dist_block_one[i_count], disk_block_two);
             for (int i = 0; i< 256; i++) {
-                if (dist_block_one[i]) {
+                if (disk_block_two[i]) {
                     printf("%d ", disk_block_two[i]);
                     if (!(i % 10) && i) {
                         printf("\n ");
@@ -219,7 +238,7 @@ int showblock() {
 
 
 int main(int argc, char *argv[]) {
-    printf("Hello, World!\n");
+    printf("********** Lab 6 **********\n");
     if (argc > 1) {
         disk = argv[1];
     }
@@ -234,6 +253,6 @@ int main(int argc, char *argv[]) {
     }
     printf("'%s' is in O_RDONLY mode\n", disk);
     showblock();
-
+    printf("\n");
     return 0;
 }
