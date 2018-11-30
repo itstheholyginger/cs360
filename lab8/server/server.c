@@ -304,7 +304,7 @@ main(int argc, char *argv[])
                     write(client_sock, buf, n);
                 }
                 close(fd);
-                strcat(line, " ECHO"); 
+                strcat(line, "file sent ECHO"); 
                 n = write(client_sock, line, MAX);
                 printf("server: wrote n=%d bytes; ECHO=[%s]\n", n, line);
                 printf("server: ready for next request\n");
@@ -332,7 +332,7 @@ main(int argc, char *argv[])
                     i += n;
                 }
                 close(fd);
-                strcat(line, " ECHO");
+                strcat(line, "file sent ECHO");
                 n = write(client_sock, line, MAX);
                 printf("server: wrote n=%d bytes; ECHO=[%s]\n", n, line);
                 printf("server: ready for next request\n");
