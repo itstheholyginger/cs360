@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <dirent.h>
-#include <fcntil.h>
+#include <fcntl.h>
 
 #define MAX 256
 
@@ -17,6 +17,26 @@ struct hostent *hp;
 int mysock, client_sock; // socket descriptors
 int serverPort;          // server port number
 int r, length, n;        // help variables
+
+
+char *parseInput(char input[]) {
+    printf("in parseint\n\tinput: %s\n", input);
+    int i = 0;
+    char* tmpstr;
+    char *tmp = strtok(input, " ");
+    char **array = (char**)malloc(sizeof(char*)*20);
+    while(tmp != NULL) {
+        tmpstr = (char*)malloc(sizeof(char)*strlen(tmp));
+        strcpy(tmpstr, tmp);
+        printf("%s\t", tmp);
+        array[i++] = tmpstr;
+        tmp = strtok(NULL, " ");
+    }
+    array[i] = NULL;
+    printf("exiting parseInt function!\n");
+    printf("%s\n", array[0]);
+    return array;
+}
 
 // Server initialization code:
 
@@ -82,7 +102,12 @@ int server_init(char *name)
 main(int argc, char *argv[])
 {
     char *hostname;
-    char line[MAX];
+    char line[MAX], copy[MAX], cwd[128];
+    double arg1, arg2, sum;
+    DIR *dir;
+    struct dirent *ent;
+
+    // getcmd(cwd, 128);
 
     if (argc < 2)
         hostname = "localhost";
@@ -107,7 +132,7 @@ main(int argc, char *argv[])
         printf("server: accepted a client connection from\n");
         printf("-----------------------------------------------\n");
         printf("        IP=%s  port=%d\n", inet_ntoa(client_addr.sin_addr.s_addr),
-               ntohs(client_addr.sin_port));
+                ntohs(client_addr.sin_port));
         printf("-----------------------------------------------\n");
 
         // Processing loop: newsock <----> client
@@ -120,14 +145,53 @@ main(int argc, char *argv[])
                 close(client_sock);
                 break;
             }
-
+            strcat(line, " ECHO");
             // show the line string
             printf("server: read  n=%d bytes; line=[%s]\n", n, line);
 
-            strcat(line, " ECHO");
+            printf("going into parseinput\n");
+            char** inputArray = parseInput(line);
+            printf("\n\nout of parseint funtion\n\n");
+            printf("%s\n", inputArray);
+            // example structure:
+            // arg1 = atof(strtok(line, " "));
+            // arg2 = atof(strtok(NULL, " "));
+            // sum = arg1 + arg2;
+            // char* string[MAX];
+            // sprintf(string, "%lf", sum);
+            // printf("arg1 = %f\narg2=%f\nsum=%f\n", arg1, arg2, sum);
+            // // send the echo line to client
+            // n = write(client_sock, string, MAX);
 
-            // send the echo line to client
-            n = write(client_sock, line, MAX);
+            // commands needed:
+            // mkdir
+            // rmdir
+            // rm
+            // cd
+            // pwd
+            // ls
+            // get
+            // put
+
+            if (!strcmp(inputArray[0], "mkdir")) {
+                printf("in mkdir\n");
+            } else if (!strcmp(inputArray[0], "rmdir")) {
+                printf("in rmdir\n");
+            } else if (!strcmp(inputArray[0], "rm")) {
+                printf("in rm\n");
+            } else if (!strcmp(inputArray[0], "cd")) {
+                printf("in cd\n");
+            } else if (!strcmp(inputArray[0], "pwd")) {
+                printf("in pwd\n");
+            } else if (!strcmp(inputArray[0], "ls")) {
+                printf("in ls\n");
+            } else if (!strcmp(inputArray[0], "get")) {
+                printf("in get\n");
+            } else if (!strcmp(inputArray[0], "put")) {
+                printf("in put\n ");
+            } 
+
+
 
             printf("server: wrote n=%d bytes; ECHO=[%s]\n", n, line);
             printf("server: ready for next request\n");
