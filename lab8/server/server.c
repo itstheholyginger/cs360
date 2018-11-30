@@ -197,8 +197,10 @@ main(int argc, char *argv[])
                 printf("in ls\n");
             } else if (!strcmp(inputArray[0], "get")) {
                 printf("in get\n");
+		sent_file(client_sock, inputArray[1]);
             } else if (!strcmp(inputArray[0], "put")) {
                 printf("in put\n ");
+		receive_file(client_sock, inputArray[1]);
             } 
 
 
