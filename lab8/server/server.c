@@ -18,15 +18,16 @@ int mysock, client_sock; // socket descriptors
 int serverPort;          // server port number
 int r, length, n;        // help variables
 
-
-char *parseInput(char input[]) {
+char *parseInput(char input[])
+{
     printf("in parseint\n\tinput: %s\n", input);
     int i = 0;
-    char* tmpstr;
+    char *tmpstr;
     char *tmp = strtok(input, " ");
-    char **array = (char**)malloc(sizeof(char*)*20);
-    while(tmp != NULL) {
-        tmpstr = (char*)malloc(sizeof(char)*strlen(tmp));
+    char **array = (char **)malloc(sizeof(char *) * 20);
+    while (tmp != NULL)
+    {
+        tmpstr = (char *)malloc(sizeof(char) * strlen(tmp));
         strcpy(tmpstr, tmp);
         printf("%s\t", tmp);
         array[i++] = tmpstr;
@@ -101,11 +102,14 @@ int server_init(char *name)
 
 main(int argc, char *argv[])
 {
+    int n = 0, size;
     char *hostname;
-    char line[MAX], copy[MAX], cwd[128];
+    char line[MAX], copy[MAX], cwd[128], buf[MAX], str[MAX];
     double arg1, arg2, sum;
     DIR *dir;
     struct dirent *ent;
+    struct stat sb;
+    FILE *fp, *gp;
 
     getcwd(cwd, 128);
 
@@ -132,12 +136,13 @@ main(int argc, char *argv[])
         printf("server: accepted a client connection from\n");
         printf("-----------------------------------------------\n");
         printf("        IP=%s  port=%d\n", inet_ntoa(client_addr.sin_addr.s_addr),
-                ntohs(client_addr.sin_port));
+               ntohs(client_addr.sin_port));
         printf("-----------------------------------------------\n");
 
         // Processing loop: newsock <----> client
         while (1)
         {
+            printf("\n\ntop of program\n\n");
             n = read(client_sock, line, MAX);
             if (n == 0)
             {
@@ -145,15 +150,15 @@ main(int argc, char *argv[])
                 close(client_sock);
                 break;
             }
-            if(!strcmp(line, "quit")) {
+            if (!strcmp(line, "quit"))
+            {
                 exit(1);
             }
-            strcat(line, " ECHO");
             // show the line string
             printf("server: read  n=%d bytes; line=[%s]\n", n, line);
 
             printf("going into parseinput\n");
-            char** inputArray = parseInput(line);
+            char **inputArray = parseInput(line);
             printf("\n\nout of parseint funtion\n\n");
 
             // example structure:
@@ -176,42 +181,169 @@ main(int argc, char *argv[])
             // get
             // put
 
-            if (!strcmp(inputArray[0], "mkdir")) {
-                mkdir(inputArray[1], 0755);
-            } else if (!strcmp(inputArray[0], "rmdir")) {
+            if (!strcmp(inputArray[0], "mkdir"))
+            {
+                if (!mkdir(inputArray[1], 0755)) {
+                    strcpy(line, "created directory");
+                }
+                else {
+                    strcpy(line, "failed to create directory");
+                }
+            }
+            else if (!strcmp(inputArray[0], "rmdir"))
+            {
                 printf("in rmdir\n");
-                rmdir(inputArray[1]);
-            } else if (!strcmp(inputArray[0], "rm")) {
+                if(!rmdir(inputArray[1])) {
+                    strcpy(line, "removed directory");
+                } else {
+                    strcpy(line, "failed to remove directory");
+                }
+            }
+            else if (!strcmp(inputArray[0], "rm"))
+            {
                 printf("in rm\n");
-                unlink(inputArray[1]);
-            } else if (!strcmp(inputArray[0], "cd")) {
+                if (!unlink(inputArray[1])) {
+                    strcpy(line, "removed file");
+                } else {
+                    strcpy(line, "failed to remove file");
+                }
+            }
+            else if (!strcmp(inputArray[0], "cd"))
+            {
                 printf("in cd\n");
-		if (strcmp(inputArray[1], "")) {
-			printf("Changing directory to %s",inputArray[1]);
-			chdir(inputArray[1]);
-			// changing CWD
-			getcwd(cwd, sizeof(cwd));
-            } else if (!strcmp(inputArray[0], "pwd")) {
+                if (strcmp(inputArray[1], ""))
+                {
+                    printf("Changing directory to %s", inputArray[1]);
+                    chdir(inputArray[1]);
+                    // changing CWD
+                    getcwd(cwd, sizeof(cwd));
+                }
+                else
+                {
+                    printf("Error: No directory specified.\n");
+                }
+            }
+            else if (!strcmp(inputArray[0], "pwd"))
+            {
                 printf("in pwd\n");
-                if (getcwd(cwd, sizeof(cwd))) {
+                if (getcwd(cwd, sizeof(cwd)))
+                {
                     printf("Current working dir: %s\n", cwd);
                     // are we just supposed to send this to the client?
+                    strcpy(line, cwd);
                 }
-                printf("\n\nleaving pwd\n\n");
-            } else if (!strcmp(inputArray[0], "ls")) {
-                printf("in ls\n");
-            } else if (!strcmp(inputArray[0], "get")) {
+            }
+            else if (!strcmp(inputArray[0], "ls"))
+            {
+                printf("doing ls\n");
+                //if no path given, ls off cwd, else ls off pathname
+                if (!inputArray[1])
+                {
+                    printf("ls '.'\n");
+                    printf("printing cwd\n");
+                    dir = opendir(".");
+                    printf("opened dir\n");
+                    strcpy(line, "");
+                    while ((ent = readdir(dir)))
+                    {
+                        printf("%s ", ent->d_name);
+                        strcat(line, ent->d_name);
+                        strcat(line, " ");
+                    }
+                    closedir(dir);
+                    printf("\n");
+                }
+                else
+                {
+                    printf("ls %s\n", inputArray[1]);
+                    printf("printing directory\n");
+                    dir = opendir(inputArray[1]);
+                    printf("opened dir\n");
+                    strcpy(line, "");
+                    while ((ent = readdir(dir)) != NULL)
+                    {
+                        printf("%s ", ent->d_name);
+                        strcat(line, ent->d_name);
+                        strcat(line, " ");
+                    }
+                    closedir(dir);
+                    printf("\n");
+                }
+            }
+
+            if (!strcmp(inputArray[0], "get"))
+            {
                 printf("in get\n");
-		sent_file(client_sock, inputArray[1]);
-            } else if (!strcmp(inputArray[0], "put")) {
+                int size, fd, n;
+                char buf[MAX] = {0};
+                struct stat sb;
+
+                // check that the file exists
+                if (stat(inputArray[1], &sb) == 0)
+                {
+                    size = sb.st_size;
+                }
+                else
+                {
+                    size = 0;
+                }
+
+                // tell receiver how many bytes to ezpect during transfer
+                sprintf(buf, "%d", size);
+                write(client_sock, buf, MAX);
+
+                if (size <= 0)
+                {
+                    return -1;
+                }
+
+                // open and read from file, send to receiver
+                fd = open(inputArray[1], O_RDONLY);
+                while (n = read(fd, buf, MAX))
+                {
+                    write(client_sock, buf, n);
+                }
+                close(fd);
+                strcat(line, " ECHO"); 
+                n = write(client_sock, line, MAX);
+                printf("server: wrote n=%d bytes; ECHO=[%s]\n", n, line);
+                printf("server: ready for next request\n");
+
+            }
+            else if (!strcmp(inputArray[0], "put"))
+            {
                 printf("in put\n ");
-		receive_file(client_sock, inputArray[1]);
-            } 
+                int size, i = 0, fd, n;
+                char buf[MAX] = {0};
 
+                // Get size of the transfer from sender
+                read(client_sock, buf, MAX);
+                sscanf(buf, "%d", &size);
 
+                if (size <= 0)
+                    return -1;
 
-            printf("server: wrote n=%d bytes; ECHO=[%s]\n", n, line);
-            printf("server: ready for next request\n");
+                // write data from sender into specified file
+                fd = open(inputArray[1], O_WRONLY | O_CREAT, 0655);
+                while (i < size)
+                {
+                    n = read(client_sock, buf, MAX);
+                    write(fd, buf, n);
+                    i += n;
+                }
+                close(fd);
+                strcat(line, " ECHO");
+                n = write(client_sock, line, MAX);
+                printf("server: wrote n=%d bytes; ECHO=[%s]\n", n, line);
+                printf("server: ready for next request\n");
+            }
+            else
+            {
+                strcat(line, " ECHO");
+                n = write(client_sock, line, MAX);
+                printf("server: wrote n=%d bytes; ECHO=[%s]\n", n, line);
+                printf("server: ready for next request\n");
+            }
         }
     }
 }
