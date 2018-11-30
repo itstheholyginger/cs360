@@ -186,6 +186,11 @@ main(int argc, char *argv[])
                 unlink(inputArray[1]);
             } else if (!strcmp(inputArray[0], "cd")) {
                 printf("in cd\n");
+		if (strcmp(inputArray[1], "")) {
+			printf("Changing directory to %s",inputArray[1]);
+			chdir(inputArray[1]);
+			// changing CWD
+			getcwd(cwd, sizeof(cwd));
             } else if (!strcmp(inputArray[0], "pwd")) {
                 printf("in pwd\n");
                 if (getcwd(cwd, sizeof(cwd))) {
