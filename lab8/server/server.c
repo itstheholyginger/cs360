@@ -107,7 +107,7 @@ main(int argc, char *argv[])
     DIR *dir;
     struct dirent *ent;
 
-    // getcmd(cwd, 128);
+    getcwd(cwd, 128);
 
     if (argc < 2)
         hostname = "localhost";
@@ -145,6 +145,9 @@ main(int argc, char *argv[])
                 close(client_sock);
                 break;
             }
+            if(!strcmp(line, "quit")) {
+                exit(1);
+            }
             strcat(line, " ECHO");
             // show the line string
             printf("server: read  n=%d bytes; line=[%s]\n", n, line);
@@ -152,7 +155,7 @@ main(int argc, char *argv[])
             printf("going into parseinput\n");
             char** inputArray = parseInput(line);
             printf("\n\nout of parseint funtion\n\n");
-            printf("%s\n", inputArray);
+
             // example structure:
             // arg1 = atof(strtok(line, " "));
             // arg2 = atof(strtok(NULL, " "));
@@ -174,15 +177,22 @@ main(int argc, char *argv[])
             // put
 
             if (!strcmp(inputArray[0], "mkdir")) {
-                printf("in mkdir\n");
+                mkdir(inputArray[1], 0755);
             } else if (!strcmp(inputArray[0], "rmdir")) {
                 printf("in rmdir\n");
+                rmdir(inputArray[1]);
             } else if (!strcmp(inputArray[0], "rm")) {
                 printf("in rm\n");
+                unlink(inputArray[1]);
             } else if (!strcmp(inputArray[0], "cd")) {
                 printf("in cd\n");
             } else if (!strcmp(inputArray[0], "pwd")) {
                 printf("in pwd\n");
+                if (getcwd(cwd, sizeof(cwd))) {
+                    printf("Current working dir: %s\n", cwd);
+                    // are we just supposed to send this to the client?
+                }
+                printf("\n\nleaving pwd\n\n");
             } else if (!strcmp(inputArray[0], "ls")) {
                 printf("in ls\n");
             } else if (!strcmp(inputArray[0], "get")) {
