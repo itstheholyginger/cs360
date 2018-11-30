@@ -276,7 +276,6 @@ main(int argc, char *argv[])
                 printf("in get\n");
                 int size, fd, n;
                 char buf[MAX] = {0};
-                struct stat sb;
 
                 // check that the file exists
                 if (stat(inputArray[1], &sb) == 0)
@@ -304,7 +303,7 @@ main(int argc, char *argv[])
                     write(client_sock, buf, n);
                 }
                 close(fd);
-                strcat(line, "file sent ECHO"); 
+                strcat(line, " "); 
                 n = write(client_sock, line, MAX);
                 printf("server: wrote n=%d bytes; ECHO=[%s]\n", n, line);
                 printf("server: ready for next request\n");

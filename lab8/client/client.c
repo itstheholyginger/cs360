@@ -88,8 +88,8 @@ char **parseInput(char *input)
 }
 
 //get file from server
-int Get(char *filename, int server_sock)
-{
+ int Get(char* filename, int server_sock)
+ {
     //buffer to write
     char buf[MAX];
     int count, n;
@@ -97,38 +97,38 @@ int Get(char *filename, int server_sock)
     //filestream for file to be sent
     FILE *fw;
     memset(buf, 0, MAX);
+    
 
+    printf("\nfilename is %s\n", filename);
     //read from socket
     read(server_sock, buf, MAX);
+    printf("buf: %s\n", buf);
     //if BAD, return error
-    if (strcmp(buf, "BAD") == 0)
+    if(strcmp(buf, "BAD") == 0)
     {
         printf("Invalid filename\n");
         return -1;
     }
-
+    
     //get based off of KC's helper code
     count = 0;
+    sscanf(buf, "%d", &size);
 
     //open the file
-    fw = fopen(filename, "w");
-
-    //get the size
-    sscanf(buf, "%lu", &size);
+    fw = fopen(filename,"w");
 
     //go through the file, writing
-    while (count < size)
-    {
-        memset(buf, 0, MAX);
-        n = read(server_sock, buf, MAX);
-        printf("client: read  n=%d bytes; echo=(%s)\n", n, buf);
-        count += n;
-        fwrite(buf, 1, n, fw);
-    }
+    // while(count < size)
+    // {
+    //     n = read(server_sock, buf, MAX);
+    //     write(fw, buf, n);
+    //     count += n;
+    // }
+    fputs(buf, fw);
     //close file stream
-    fclose(fw);
+    fclose(fw); 
     return n;
-}
+ }
 
 int Put(char *filename, int server_sock)
 {
@@ -314,10 +314,11 @@ main(int argc, char *argv[])
         {
             n = write(server_sock, line, MAX);
             printf("client wrote n=%d bytes; line=(%s)\n", n, line);
-            Get(inputArray[1], server_sock);
 
             // Read a line from sock and show it
             n = read(server_sock, ans, MAX);
+            Get(inputArray[1], server_sock);
+
             printf("client: read  n=%d bytes; echo=(%s)\n", n, ans);
         }
         else if (!strcmp(inputArray[0], "put"))
